@@ -3,11 +3,13 @@ import { Dispatch, SetStateAction } from "react";
 type propType = {
   searchValue: string;
   setSearchValue: Dispatch<SetStateAction<string>>;
+  setCurrentPage:any
 };
 
-const InputSearch = ({ searchValue, setSearchValue }: propType) => {
+const InputSearch = ({ searchValue, setSearchValue,setCurrentPage }: propType) => {
   const handleInput = (e: any) => {
     setSearchValue(e.target.value);
+    setCurrentPage(1)
   };
 
   return (

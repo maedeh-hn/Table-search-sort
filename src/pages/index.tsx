@@ -35,6 +35,12 @@ export default function Home() {
   const [searchValue, setSearchValue] = useState("");
   const [filteredUser, setFilteredUser] = useState<userType[]>();
   const [sortOrder, setSortOrder] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [sortType,setSortType]=useState<string>("");
+
+console.log(currentPage);
+
   useEffect(() => {
     getUserRequest()
       .then((response) => {
@@ -46,15 +52,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    setFilteredUser(
-      resultData?.filter((userItem: any) =>
-        userItem.first_name.toLowerCase().includes(searchValue.toLowerCase())
-      )
+    setFilteredUser(resultData);
+    const filteredData = resultData?.filter((userItem: userType) =>
+    userItem.first_name.toLowerCase().includes(searchValue.toLowerCase())
     );
-  }, [searchValue, resultData]);
-  const sortUsers = (value: any) => {
-    let sortedUsers: userType[] = [];
+    
+    const startIndex = (currentPage - 1) * 10;
+    const endIndex = startIndex + 10;
+    const resultDataLength = Math.ceil((filteredData?.length || 0) / 10);
+    setTotalPages(resultDataLength);
+    setFilteredUser(filteredData?.slice(startIndex, endIndex));
 
+  }, [searchValue, resultData, currentPage]);
+
+  const sortUsers = (value: string) => {
+    let sortedUsers: userType[] = [];
     if (filteredUser) {
       sortedUsers = [...filteredUser].sort((a, b) => {
         if (a.first_name < b.first_name) {
@@ -66,16 +78,25 @@ export default function Home() {
         }
       });
     }
-
     setFilteredUser(sortedUsers);
     setSortOrder(value === "ascending" ? "ascending" : "descending");
   };
-  console.log(filteredUser);
+
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
-    <main
-      className={` max-w-[800px] mx-auto py-20`}
-    >
+    <main className={` max-w-[800px] mx-auto py-20`}>
       <div className="flex items-center justify-center gap-5 w-full">
         <div className="w-full">
           <div className="flex items-center gap-3">
@@ -101,34 +122,51 @@ export default function Home() {
           <InputSearch
             searchValue={searchValue}
             setSearchValue={setSearchValue}
+            setCurrentPage={setCurrentPage}
           />
         </div>
       </div>
 
-      {resultData?.length > 0 && (
-        <table className=" border-[1px] border-gray-400 text-center  mx-auto w-full mt-7">
-          <tbody>
-            <tr>
-              <th className="bg-gray-200 py-5 border-[1px] border-gray-400 px-8">
-                Company
-              </th>
-              <th className="bg-gray-200 py-5 border-[1px] border-gray-400 px-8">
-                Contact
-              </th>
-              <th className="bg-gray-200 py-5 border-[1px] border-gray-400 px-8">
-                Country
-              </th>
-            </tr>
-            {filteredUser?.map((items: userType) => (
+      <table className=" border-[1px] border-gray-400 text-center  mx-auto w-full mt-7">
+        <tbody>
+          <tr>
+            <th className="bg-gray-200 py-5 border-[1px] border-gray-400 px-8">
+              First name
+            </th>
+            <th className="bg-gray-200 py-5 border-[1px] border-gray-400 px-8">
+              Last name
+            </th>
+            <th className="bg-gray-200 py-5 border-[1px] border-gray-400 px-8">
+              Email
+            </th>
+          </tr>
+          {resultData?.length > 0 &&
+            filteredUser?.map((items: userType) => (
               <tr className="border-[1px] py-2" key={items.id}>
                 <td className="border px-8 py-4">{items.first_name}</td>
                 <td className="border px-8 py-4">{items.last_name}</td>
                 <td className="border px-8 py-4">{items.email}</td>
               </tr>
             ))}
-          </tbody>
-        </table>
-      )}
+        </tbody>
+      </table>
+      <div className="flex justify-center mt-5">
+        <button
+          className="bg-gray-200  text-black font-bold py-2 px-4 rounded-l"
+          onClick={goToPreviousPage}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <div className="bg-gray-100 py-2 px-4">{`Page ${currentPage} of ${totalPages}`}</div>
+        <button
+          className="bg-gray-200  text-black font-bold py-2 px-4 rounded-r"
+          onClick={goToNextPage}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+      </div>
     </main>
   );
 }
