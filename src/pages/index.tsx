@@ -1,4 +1,6 @@
 import InputSearch from "@/components/InputSearch";
+import PageInation from "@/components/PageInation";
+import SortTableByName from "@/components/SortTableByName";
 import { getUserRequest } from "@/services/requestList";
 import { useEffect, useState } from "react";
 
@@ -37,9 +39,6 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [sortType,setSortType]=useState<string>("");
-
-console.log(currentPage);
 
   useEffect(() => {
     getUserRequest()
@@ -54,70 +53,27 @@ console.log(currentPage);
   useEffect(() => {
     setFilteredUser(resultData);
     const filteredData = resultData?.filter((userItem: userType) =>
-    userItem.first_name.toLowerCase().includes(searchValue.toLowerCase())
+      userItem.first_name.toLowerCase().includes(searchValue.toLowerCase())
     );
-    
+
     const startIndex = (currentPage - 1) * 10;
     const endIndex = startIndex + 10;
     const resultDataLength = Math.ceil((filteredData?.length || 0) / 10);
     setTotalPages(resultDataLength);
     setFilteredUser(filteredData?.slice(startIndex, endIndex));
-
+    setSortOrder("");
   }, [searchValue, resultData, currentPage]);
-
-  const sortUsers = (value: string) => {
-    let sortedUsers: userType[] = [];
-    if (filteredUser) {
-      sortedUsers = [...filteredUser].sort((a, b) => {
-        if (a.first_name < b.first_name) {
-          return value === "ascending" ? -1 : 1;
-        } else if (a.first_name > b.first_name) {
-          return value === "ascending" ? 1 : -1;
-        } else {
-          return 0;
-        }
-      });
-    }
-    setFilteredUser(sortedUsers);
-    setSortOrder(value === "ascending" ? "ascending" : "descending");
-  };
-
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
   return (
     <main className={` max-w-[800px] mx-auto py-20`}>
       <div className="flex items-center justify-center gap-5 w-full">
-        <div className="w-full">
-          <div className="flex items-center gap-3">
-            <label>Ascending</label>
-            <input
-              type="radio"
-              value={sortOrder}
-              onChange={() => sortUsers("ascending")}
-              checked={sortOrder === "ascending"}
-            ></input>
-          </div>
-          <div className="flex items-center gap-3">
-            <label>Descending</label>
-            <input
-              type="radio"
-              value={sortOrder}
-              onChange={() => sortUsers("descending")}
-              checked={sortOrder === "descending"}
-            ></input>
-          </div>
-        </div>
+        <SortTableByName
+          setSortOrder={setSortOrder}
+          setFilteredUser={setFilteredUser}
+          filteredUser={filteredUser}
+          sortOrder={sortOrder}
+        />
+
         <div className="w-full">
           <InputSearch
             searchValue={searchValue}
@@ -150,23 +106,11 @@ console.log(currentPage);
             ))}
         </tbody>
       </table>
-      <div className="flex justify-center mt-5">
-        <button
-          className="bg-gray-200  text-black font-bold py-2 px-4 rounded-l"
-          onClick={goToPreviousPage}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <div className="bg-gray-100 py-2 px-4">{`Page ${currentPage} of ${totalPages}`}</div>
-        <button
-          className="bg-gray-200  text-black font-bold py-2 px-4 rounded-r"
-          onClick={goToNextPage}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
+      <PageInation
+        setCurrentPage={setCurrentPage}
+        currentPage={currentPage}
+        totalPages={totalPages}
+      />
     </main>
   );
 }
